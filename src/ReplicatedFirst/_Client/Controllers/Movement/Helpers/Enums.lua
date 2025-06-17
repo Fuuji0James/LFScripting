@@ -1,0 +1,3 @@
+local enums = {}
+
+return enums
