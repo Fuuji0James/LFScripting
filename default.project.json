@@ -6,11 +6,7 @@
     "ReplicatedFirst": {
       "$className": "ReplicatedFirst",
       "$ignoreUnknownInstances": true,
-      "$path": "src/ReplicatedFirst",
-
-      "Packages": {
-          "$path": "Packages"
-      }
+      "$path": "src/ReplicatedFirst"
     },
     "StarterPlayer": {
       "$className": "StarterPlayer",
@@ -31,7 +27,11 @@
     "ReplicatedStorage": {
       "$className": "ReplicatedStorage",
       "$ignoreUnknownInstances": true,
-      "$path": "src/ReplicatedStorage"
+      "$path": "src/ReplicatedStorage",
+
+        "Packages": {
+          "$path": "Packages"
+      }
     },
 
     "TestService": {
