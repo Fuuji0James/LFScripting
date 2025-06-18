@@ -6,7 +6,7 @@ local Libraries = RS.Libraries
 local Packages = SSS.Packages
 local CommsFolder = RS.Comms
 
-local Promise = require(Libraries.PromiseV4)
+local Promise = require(Libraries.promise)
 local Tags = require(RF._Shared.TagList)
 local BaseComponent = require(Packages._BaseComponent)
 

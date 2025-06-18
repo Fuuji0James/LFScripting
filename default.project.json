@@ -29,8 +29,8 @@
       "$ignoreUnknownInstances": true,
       "$path": "src/ReplicatedStorage",
 
-        "Packages": {
-          "$path": "Packages"
+        "Libraries": {
+          "$path": "Libraries"
       }
     },
 

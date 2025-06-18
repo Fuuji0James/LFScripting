@@ -7,12 +7,11 @@ local _ClientFolder = RF._Client
 local _SharedFolder = RF._Shared
 
 local Libraries = RS.Libraries
-local Packages = RS.Packages
 
 local ClientControllersFolder = _ClientFolder.Controllers
 local ClientReceiversFolder = _ClientFolder.Receivers
 
-local FindValueInTable = require(Packages.FindValueInTable)
+local FindValueInTable = require(Libraries.FindValueInTable)
 local TagList = require(_SharedFolder.TagList)
 local TimeNow = require(Libraries["Debugging Tools"].Helpers.CurrentTime)
 
@@ -156,10 +155,13 @@ function Init(Character: Model)
 		end
 	end
 
-	local function AddTags(Components)		
+	local function AddTags(Components)
 		for _, Component in Components do
-			if typeof(Component) == "table" then AddTags(Component) break end
-			
+			if typeof(Component) == "table" then
+				AddTags(Component)
+				break
+			end
+
 			CS:GetInstanceAddedSignal(Component):Connect(function()
 				instanceAddedToComponent(Component)
 			end)
@@ -168,7 +170,7 @@ function Init(Character: Model)
 			end)
 		end
 	end
-	
+
 	-- Added during runtime
 	AddTags(TagList.Components)
 end
