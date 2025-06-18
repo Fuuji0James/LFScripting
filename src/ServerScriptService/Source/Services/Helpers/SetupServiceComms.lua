@@ -1,7 +1,20 @@
--- {Most Recent: 12/5/2025} //FUUJI
--- Status: Prototype
+local module = {}
 
-return function(Prefix, ListOfEvents: {}, Parent)
+-- Have Name & Prefix, one or the other
+function module.SetupFolders (Name, Parent, Prefix)
+	-- This sets up all the folders that a given rig/client would use
+	
+	local AddListenerFolder = function(parent)
+		local Folder = Instance.new("Folder")
+		Folder.Name = if Prefix then `{Prefix}_Remotes` else Name
+		Folder.Parent = parent
+		return Folder
+	end
+	
+	return {AddListenerFolder(Parent)}
+end
+
+function module.SetupRemotes (Prefix, ListOfEvents: {}, Parent)
 	local Remotes = {}
 
 	for Suffix_Name, Type in ListOfEvents do
@@ -24,3 +37,5 @@ return function(Prefix, ListOfEvents: {}, Parent)
 
 	return Remotes
 end
+
+return module

@@ -8,11 +8,8 @@ local ComponentFolder = SSS.Source.Services["Client-Relaying Services"].Componen
 local CommsFolder = RS.Comms
 local ComponentSets = ComponentFolder.ComponentSets
 
-
 local Tags = require(RF._Shared.TagList)
-local SetupFolders = require(SSS.Source.Services.Helpers.SetupServiceComms.SetupFolders)
-local SetupRemotes = require(SSS.Source.Services.Helpers.SetupServiceComms.SetupRemotes)
-
+local SetupServiceComms = require(SSS.Source.Services.Helpers.SetupServiceComms)
 
 local BaseComponent = {}
 
@@ -23,30 +20,8 @@ function BaseComponent.new(Name: string, Rig: Model, OnInvoke)
 		[`{Name}Set`] = require(ComponentSets[`{Name}_Set`]),
 		[`{Name}DataValues`] = nil,
 
-		IsClient = nil
+		IsClient = nil,
 	}
-
-	-- Determining the Client
-
-	local Prefix
-	local RemoteType
-
-	local isPlayer = Rig:HasTag(Tags.PlayerTag)
-
-	if isPlayer then
-		Component["Player"] = Players:GetPlayerFromCharacter(Rig) -- For easy syntax
-
-		Prefix = "Client"
-		RemoteType = "Remote"
-	else
-		Component["Bot"] = Rig
-
-		Prefix = "Server"
-		RemoteType = "Bindable"
-	end
-
-	-- Setting up folders/listeners
-
 
 	return Component
 end

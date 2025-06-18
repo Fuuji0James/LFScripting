@@ -12,7 +12,7 @@ local function InitHookedServies(LiveMockTestsAllowed, Service)
 					local TestThisService 		= false
 
 					if MockTestMs then
-						if MockTestMs.TestingFlag then
+						if Ms.TestingFlag then
 							if (LiveMockTestsAllowed) or (LiveMockTestsAllowed == false and game:GetService('RunService'):IsStudio()) then
 								TestThisService = true
 

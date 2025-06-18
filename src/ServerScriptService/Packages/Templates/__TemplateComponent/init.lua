@@ -7,7 +7,6 @@ local SetupServiceComms = require(script:FindFirstAncestor("Services").Helpers.S
 
 local Service = {
 	["Name"] = script.Name,
-	["TestingFlag"] = true
 }
 Service.__index = Service
 setmetatable(Service, HookBase)
