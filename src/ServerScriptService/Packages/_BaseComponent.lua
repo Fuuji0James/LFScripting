@@ -5,9 +5,9 @@ local RS = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 
 local ComponentFolder = SSS.Source.Services["Client-Relaying Services"].Components
-local CommsFolder = RS.Comms
 local ComponentSets = ComponentFolder.ComponentSets
 
+local PromiseV4 = require(RS.Libraries.promise)
 local Tags = require(RF._Shared.TagList)
 local SetupServiceComms = require(SSS.Source.Services.Helpers.SetupServiceComms)
 
@@ -24,6 +24,35 @@ function BaseComponent.new(Name: string, Rig: Model, OnInvoke)
 	}
 
 	return Component
+end
+
+function BaseComponent:PerformInputOnRig(Input)
+	if not Input then
+		return
+	end
+
+	local Action = self[`{self.Name}Set`][Input]
+
+	if not Action then
+		print(`We gotta make this {Input} -System`)
+		return
+	end
+
+	local ReturnValue
+
+	local promise = PromiseV4.new(function(resolve, reject, onCancel)
+		local _, ErrorMsg = pcall(function()
+			ReturnValue = Action(self)
+		end)
+
+		if not ErrorMsg then
+			resolve(ReturnValue)
+		else
+			reject(ErrorMsg)
+		end
+	end)
+
+	return promise
 end
 
 function BaseComponent:Destroy(Message: string, Component)
