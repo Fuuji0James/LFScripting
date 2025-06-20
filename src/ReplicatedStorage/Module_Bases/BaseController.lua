@@ -29,6 +29,7 @@ end
 function BindAllInputs(Binds, Tag)
 	for ActionName, Bind in Binds do
 		local Input = Enums[Tag][ActionName]
+		print(Input)
 		UISBinds:BindToInput(ActionName, Bind, Input)
 	end
 end

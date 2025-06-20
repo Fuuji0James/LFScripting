@@ -2,13 +2,13 @@ local SSS = game:GetService("ServerScriptService")
 local RF = game:GetService("ReplicatedFirst")
 local RS = game:GetService("ReplicatedStorage")
 
-local Libraries = RS.Libraries
 local Packages = SSS.Packages
 local CommsFolder = RS.Comms
 
-local Promise = require(Libraries.promise)
 local Tags = require(RF._Shared.TagList)
 local BaseComponent = require(Packages._BaseComponent)
+local ComponentHandler = require(SSS.Packages.ComponentHandler)
+local CombatMW = require(script.MW.CombatMW)
 
 local SetupServiceComms = require(SSS.Source.Services.Helpers.SetupServiceComms)
 
@@ -16,8 +16,27 @@ local Combat = {
 	Tag = Tags.Components.Combat,
 }
 
-local function OnInvoke()
-	print("hopefully it works")
+local function OnInvoke(Plr: Player, Input)
+	local CurrentComponent = ComponentHandler.GetComponentsFromInstance(Plr, Combat.Tag)
+	if not CombatMW:CheckValues(CurrentComponent) then
+		return
+	end
+
+	local promise = CurrentComponent:PerformInputOnRig(Input)
+	local ReturnedCombatDataValues
+
+	promise
+		:andThen(function(ReturnedValue)
+			ReturnedCombatDataValues = ReturnedValue
+		end)
+		:catch(function(ErrorMsg)
+			warn(ErrorMsg)
+		end)
+		:await()
+
+	CurrentComponent["Component_Combat_R6DataValues"] = ReturnedCombatDataValues
+
+	return CurrentComponent["Component_Combat_R6DataValues"].currentCombo
 end
 
 function Combat.Init()
@@ -31,6 +50,8 @@ end
 
 function Combat.new(Rig: Model)
 	local self = BaseComponent.new(Combat.Tag, Rig, OnInvoke)
+
+	return self
 end
 
 return Combat

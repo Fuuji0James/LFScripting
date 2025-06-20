@@ -1,11 +1,37 @@
 return {
-	Attack = function(ActionName, UserInputState, InputObject: InputObject) end,
+	Attack = function(ActionName, UserInputState, InputObject: InputObject)
+		if UserInputState == Enum.UserInputState.Begin then
+			print("attack")
+		end
+	end,
 
-	Block = function(ActionName, UserInputState, InputObject: InputObject) end,
+	Block = function(ActionName, UserInputState, InputObject: InputObject)
+		if UserInputState == Enum.UserInputState.Begin then
+			print("block")
+		end
+	end,
 
-	Parry = function(ActionName, UserInputState, InputObject: InputObject) end,
+	BlockEnd = function(ActionName, UserInputState, InputObject: InputObject)
+		if UserInputState == Enum.UserInputState.End then
+			print("blocking ended")
+		end
+	end,
 
-	Feint = function(ActionName, UserInputState, InputObject: InputObject) end,
+	Parry = function(ActionName, UserInputState, InputObject: InputObject)
+		if UserInputState == Enum.UserInputState.Begin then
+			print("parry")
+		end
+	end,
 
-	Critical = function(ActionName, UserInputState, InputObject: InputObject) end,
+	Feint = function(ActionName, UserInputState, InputObject: InputObject)
+		if UserInputState == Enum.UserInputState.Begin then
+			print("feint")
+		end
+	end,
+
+	Critical = function(ActionName, UserInputState, InputObject: InputObject)
+		if UserInputState == Enum.UserInputState.Begin then
+			print("critical")
+		end
+	end,
 }
