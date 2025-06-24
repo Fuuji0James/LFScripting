@@ -8,7 +8,7 @@ local BaseService = {}
 BaseService.__index = BaseService
 
 --*** If args not sent, then use nothing instead
-function BaseService.new(MockTestingConfig: {}, DefaultConfig: {}) 
+function BaseService.new(MockTestingConfig: {}, DefaultConfig: {})
 
 	local Config = if (not MockTestingConfig) then DefaultConfig else MockTestingConfig
 
@@ -27,6 +27,7 @@ function BaseService.new(MockTestingConfig: {}, DefaultConfig: {})
 	self._config = Config
 
 	self.__throttledHooks = {}
+	self._emitsToWaitOn	  = {}
 
 	self._adapters		= Config.Adapters  or {} -- plain funcs
 	self._observers 	= Config.Observers or {} -- plain funcs
@@ -59,15 +60,17 @@ function BaseService:_emitHook(name, ...)
 
 	if #signals ~= 0 then
 		if signals[1] then return signals[1](...) end
-		if signals[2] and self['States'].IsRunning then signals[2]:Fire(...) end -- the self['States'].IsRunning part is lowk optional
+		if signals[2] then signals[2]:Fire(...) end
 	elseif not (self.__throttledHooks[name]) then 
 		self.__throttledHooks[name] = true
 	end
 end
 
 
-function BaseService:_waitOnEmit()
-
+function BaseService:_waitOnEmit(name: string)
+	if not self._observers[name] then warn(`Given hook: {name} is not an observer! You cannot observe adapters!`) return end
+	
+	return self._convertedObservers[name]:Wait()
 end
 
 --*** Used by the testing script to customize the adapters/observers (if there are even any already) // You can wait on these hooks to be emitted btw

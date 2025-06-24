@@ -3,7 +3,7 @@ local KnownAdapters = require(script.KnownAdapters)
 local LoggedData = {}
 
 return {
-	['Settings'] = {}, -- Sent from server 
+	['Settings'] = { ['ResyncAfter'] = 1 }, -- Sent from server (resyncs every one second of ticks)
 	['Adapters'] = { -- change underlying code & would produce a different effect
 		['KnownAdapters'] = KnownAdapters,
 

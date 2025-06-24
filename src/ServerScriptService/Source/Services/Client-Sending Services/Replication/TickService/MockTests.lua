@@ -1,15 +1,14 @@
-local module = {
-	['TestingFlag'] = false
-}
+local module = {}
 
 local DefaultConfig = require(script.Parent.DefaultConfig)
 
 function module:SetupTestConfig()
 	-- hook stuff is setup here
 	
-	DefaultConfig.Settings.TickDelta = 1/1.5
-	DefaultConfig['Observers'].TickChanged = function(serviceClass, currentTick)
-		print(`ElapsedTime is {DefaultConfig['Adapters'].TimeProvider() - serviceClass.States.ServerStartTime}`) 
+	DefaultConfig.Settings.TickDelta = 1/30
+	DefaultConfig.Settings.ResetAtTick = 30
+	DefaultConfig['Observers'].TickChanged = function(_, currentTick)
+		-- print(`CurrentTick is {currentTick}`) 
 	end
 	
 	return DefaultConfig
