@@ -1,13 +1,15 @@
 local ComponentHandler = require(game:GetService('ServerScriptService').Packages.ComponentHandler)
+local ProxyHandler	   = require(game:GetService("ReplicatedFirst")._Shared.Utility.proxytable)
+local _registry 	   = require(game:GetService("ReplicatedFirst")._Shared._registry)
 
-local function InitHookedServies(LiveMockTestsAllowed, Service)
+local function InitHookedServies(LiveMockTestsAllowed, ServiceScript)
 	--coroutine.wrap(function()
-		if Service:IsA("ModuleScript") and not (string.match(Service.Name, "^__Template")) then
-			local Ms = require(Service)
+		if ServiceScript:IsA("ModuleScript") and not (string.match(ServiceScript.Name, "^__Template")) then
+			local Ms = require(ServiceScript)
 
 			if typeof(Ms) == 'table' then
 				if (Ms.new and Ms.Run and (not Ms.Tag)) then -- has a life cycle, and doesn't have a tag for components
-					local MockTestMs 			= if Service:FindFirstChild("MockTests") then require(Service:WaitForChild('MockTests')) else nil
+					local MockTestMs 			= if ServiceScript:FindFirstChild("MockTests") then require(ServiceScript:WaitForChild('MockTests')) else nil
 					local MockTestingConfig: {} =  nil
 					local TestThisService 		= false
 
@@ -19,24 +21,27 @@ local function InitHookedServies(LiveMockTestsAllowed, Service)
 								if (MockTestMs.SetupTestConfig) then 
 									MockTestingConfig = MockTestMs:SetupTestConfig()
 
-									if not MockTestingConfig then print(`Mock tests should return their config? | Take off the testing flag to silence. @{Service}`)
+									if not MockTestingConfig then print(`Mock tests should return their config? | Take off the testing flag to silence. @{ServiceScript}`)
 									end
-								end	
+								end
 							end
 						end
 
-						local ServiceMs = Ms.new(MockTestingConfig) -- using it (its nil if conditions arent met BTW)
+						-- making a proxy for them				
+						local _serviceData = Ms.new(MockTestingConfig) -- data gained from service
+						local Service = ProxyHandler.new(ServiceScript.Name, _serviceData)
+						
+						_registry[ServiceScript.Name] = Service
 
-						ServiceMs:Run()
-
+						Service:Run()
 
 						if TestThisService then
-							MockTestMs:StartTest(ServiceMs) -- do ur own scenario or wtv
+							MockTestMs:StartTest(Service) -- do ur own scenario or wtv
 						end
 
 						--Ms.IsRunning = true -- make sure all services have this
 
-					if ServiceMs.OnClose then game:BindToClose(function() ServiceMs:OnClose() end) end -- some services use alot of mem, so they may need this so shutdown times are lower
+					if Service.OnClose then game:BindToClose(function() Service:OnClose() end) end -- some services use alot of mem, so they may need this so shutdown times are lower
 					
 					end
 				end
