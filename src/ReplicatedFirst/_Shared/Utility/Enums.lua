@@ -1,5 +1,9 @@
+local TagList = require(game:GetService("ReplicatedFirst")._Shared.TagList)
+
+local _controllers = TagList['Controllers']
+
 return {
-	Controller_Combat_R6 = {
+	[_controllers.Combat] = {
 		["Attack"] = Enum.UserInputType.MouseButton1,
 		["Feint"] = Enum.UserInputType.MouseButton2,
 		["Parry"] = Enum.KeyCode.F,
@@ -8,5 +12,7 @@ return {
 		["Critical"] = Enum.KeyCode.R,
 	},
 
-	Movement = {},
+	[_controllers.Movement] = {
+		-- ['JumpBind'] = 
+	},
 }

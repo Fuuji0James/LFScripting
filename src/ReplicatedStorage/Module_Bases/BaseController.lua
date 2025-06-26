@@ -28,6 +28,7 @@ function Controller.new(Tag)
 	return self
 end
 
+
 function BindAllInputs(self)
 	for ActionName, Bind in self.Binds do
 		local Input = Enums[self.Name][ActionName]
@@ -54,7 +55,7 @@ function Controller:Init()
 		-- Other stuff if needed
 	end)
 
-	print(self.Binds)
+	-- print(self.Binds)
 
 	if not CanInit then
 		warn(`{self.Name} for {self.Player} cannot be initialized for reason '{ErrorMsg}'`)
