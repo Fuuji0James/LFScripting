@@ -16,9 +16,10 @@ local Combat = {
 	Tag = Tags.Components.Combat,
 }
 
-local function OnInvoke(Plr: Player, Input)
-	local CurrentComponent = ComponentHandler.GetComponentsFromInstance(Plr, Combat.Tag)
-	if not CombatMW:CheckValues(CurrentComponent) then
+local function OnInvoke(Plr, Input)
+	local CurrentComponent = ComponentHandler.GetComponentsFromInstance(Plr.Character, Combat.Tag)
+
+	if not CombatMW:CheckValues(CurrentComponent, Input) then
 		return
 	end
 
@@ -27,6 +28,7 @@ local function OnInvoke(Plr: Player, Input)
 
 	promise
 		:andThen(function(ReturnedValue)
+			print(ReturnedValue)
 			ReturnedCombatDataValues = ReturnedValue
 		end)
 		:catch(function(ErrorMsg)
@@ -36,6 +38,7 @@ local function OnInvoke(Plr: Player, Input)
 
 	CurrentComponent["Component_Combat_R6DataValues"] = ReturnedCombatDataValues
 
+	print(CurrentComponent["Component_Combat_R6DataValues"].currentCombo)
 	return CurrentComponent["Component_Combat_R6DataValues"].currentCombo
 end
 

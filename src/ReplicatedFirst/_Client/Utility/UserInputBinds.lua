@@ -23,7 +23,7 @@ end
 --
 
 -- The args after the callback are the keycodes and whatnot to bind to
-function Utility:BindToInput(actionName, func, ...)
+function Utility:BindToInput(actionName, func, DataTable, ...)
 	local binds = { ... }
 	self.connections[actionName] = {}
 
@@ -33,7 +33,7 @@ function Utility:BindToInput(actionName, func, ...)
 			UIS.InputBegan:Connect(function(input, processed)
 				if input.KeyCode == keycode or input.UserInputType == keycode then
 					local _, E = pcall(function()
-						func(actionName, input.UserInputState, input, processed)
+						func(actionName, input.UserInputState, input, DataTable, processed)
 					end)
 
 					if E then
@@ -45,7 +45,7 @@ function Utility:BindToInput(actionName, func, ...)
 			UIS.InputChanged:Connect(function(input, processed)
 				if input.KeyCode == keycode or input.UserInputType == keycode then
 					local _, E = pcall(function()
-						func(actionName, input.UserInputState, input, processed)
+						func(actionName, input.UserInputState, input, DataTable, processed)
 					end)
 
 					if E then
@@ -57,7 +57,7 @@ function Utility:BindToInput(actionName, func, ...)
 			UIS.InputEnded:Connect(function(input, processed)
 				if input.KeyCode == keycode or input.UserInputType == keycode then
 					local _, E = pcall(function()
-						func(actionName, input.UserInputState, input, processed)
+						func(actionName, input.UserInputState, input, DataTable, processed)
 					end)
 
 					if E then

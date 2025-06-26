@@ -6,7 +6,8 @@ local TimerUtil = require(game:GetService("ReplicatedStorage").Libraries.Timer)
 local SetupServiceComms = require(script:FindFirstAncestor("Services").Helpers.SetupServiceComms)
 
 local Service = {
-	["TestingFlag"] = true,
+	["Name"] = script.Name,
+	["TestingFlag"] = false,
 }
 Service.__index = Service
 setmetatable(Service, HookBase)

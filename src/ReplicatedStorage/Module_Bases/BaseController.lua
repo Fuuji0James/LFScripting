@@ -5,6 +5,7 @@ local Players = game:GetService("Players")
 local Enums = require(RF._Shared.Utility.Enums)
 local UISBinds = require(RF._Client.Utility.UserInputBinds)
 local TagList = require(RF._Shared.TagList)
+local AnimationUtil = require(RF._Client.Utility.AnimationUtil)
 
 local Controller = {}
 
@@ -18,6 +19,7 @@ function Controller.new(Tag)
 		Connections = {},
 		Animations = {},
 		Binds = {},
+		ClientDataValues = {},
 
 		Rig = Players.LocalPlayer.Character,
 		Player = Players.LocalPlayer,
@@ -26,12 +28,21 @@ function Controller.new(Tag)
 	return self
 end
 
-function BindAllInputs(Binds, Tag)
-	for ActionName, Bind in Binds do
-		local Input = Enums[Tag][ActionName]
-		-- print(Input)
-		UISBinds:BindToInput(ActionName, Bind, Input)
+
+function BindAllInputs(self)
+	for ActionName, Bind in self.Binds do
+		local Input = Enums[self.Name][ActionName]
+		UISBinds:BindToInput(ActionName, Bind, self, Input)
 	end
+end
+
+function LoadAnimations(self)
+	local Tag = self.Name
+
+	local AnimsFolder = RF._Client.Animations[Tag]
+	local Animations = AnimationUtil:LoadAnimsOnTrack(AnimsFolder, self["Rig"].Humanoid.Animator)
+
+	return Animations
 end
 
 function Controller:Init()
@@ -51,7 +62,8 @@ function Controller:Init()
 		self["Initialized"] = false
 	else
 		-- All listeners and everything was setup so we...
-		BindAllInputs(self.Binds, self.Name)
+		BindAllInputs(self)
+		self["Animations"] = LoadAnimations(self)
 
 		print(`{self.Name} is Initialized [Controller]`)
 		self["Initialized"] = true
