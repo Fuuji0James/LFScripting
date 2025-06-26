@@ -1,7 +1,7 @@
 local CommsFolder = game.ReplicatedStorage:WaitForChild("Comms")
 local HookBase = require(game:GetService("ReplicatedStorage").Module_Bases._HookBase)
 
-local Signal = require(game.ReplicatedStorage.Libraries.FastSignal)
+local TimerUtil = require(game:GetService("ReplicatedStorage").Libraries.Timer)
 
 local SetupServiceComms = require(script:FindFirstAncestor("Services").Helpers.SetupServiceComms)
 
@@ -55,9 +55,18 @@ function UpdateTimeSinceLastTick(self)
 	end)
 end
 
-function UpdateServerTick(self, IsCheckingResync, dt)
-	self["States"]._TimeAccumulated += dt
+function UpdateServerTick(self)
+	if self["States"].CurrentTick >= self.Settings.ResetAtTick then
+		self["States"].CurrentTick = 0
+		self['States'].TimesReset += 1
+	end
 
+	self["States"].CurrentTick += 1
+	-- see if we still bottleneck first before adding the pending resyncs thing
+	UpdateTimeSinceLastTick(self)
+	self:_emitHook("TickChanged", self, self["States"].CurrentTick)
+
+	--[[
 	while self["States"]._TimeAccumulated >= self.Settings.TickDelta do -- if its larger than the tD, it would run again
 		if self["States"].CurrentTick >= self.Settings.ResetAtTick then
 			self["States"].CurrentTick = 0
@@ -79,12 +88,10 @@ function UpdateServerTick(self, IsCheckingResync, dt)
 			CheckIfResyncIsAllowed(self, IsCheckingResync, 0)
 		end
 
-		--if self.Settings['Debugging'] then
-		--	print(`{script.Name} Tick: {self.CurrentTick}, Current.Δ: {self.Settings.TickDelta}, TimeSinceLastTick: {self.TimeSinceLastTick}`)
-		--end
 		UpdateTimeSinceLastTick(self)
 		self:_emitHook("TickChanged", self, self["States"].CurrentTick)
 	end
+	]]
 end
 
 function OnInvokeFromClient(self, player, context)
@@ -113,10 +120,12 @@ function OnInvokeFromClient(self, player, context)
 	if context == JOINED then
 		local stateSnapShot = createFormalState() -- because i need things that may take an impossible amount of mem to do otherwise
 
-		package = { stateSnapShot, self["Settings"], self["__shared"], self:GetElapsedTime() }
+		package = { stateSnapShot, self["Settings"], self["__shared"] }
 
 		self:_emitHook("PlayerConnectedToService")
 	elseif context == RESYNC then
+		local stateSnapShot = createFormalState()
+
 		if self["States"].PendResyncs then
 			-- wait until you can send resyncs again
 			--Hook:wait()
@@ -124,7 +133,8 @@ function OnInvokeFromClient(self, player, context)
 
 		self:_emitHook("ResyncSent", player)
 
-		package = { self["States"] }
+		package = { stateSnapShot }
+		-- print(package)
 	end
 
 	return package
@@ -159,6 +169,7 @@ function Service.new(MockTestingConfig) -- Really just an initialize function, b
 	States.TimeSinceLastTick = 0
 	States._TimeAccumulated = 0
 	States.TimesReset = 0
+	States.IsRunning = false
 
 	States.PendResyncs = false
 	States.RemotesFolder = SetupFRS(States) -- (Sets up Folders, Remotes & Signals)
@@ -190,24 +201,41 @@ end
 function Service:Run() ---***Have to add in the visualizers stuff too
 	--game:GetService('RunService').Heartbeat:Wait()
 	local StartTime = self:_emitHook("TimeProvider")
-
-	local IsCheckingResync = false
+	-- local IsCheckingResync = false
 
 	self["States"].IsRunning = true
 	self["States"].ServerStartTime = StartTime
+
 	self["States"].RemotesFolder["RequestInfoFromServer"].OnServerInvoke = function(player, context)
 		return OnInvokeFromClient(self, player, context)
 	end
 
+	local updateTimer = TimerUtil.new(self["Settings"].TickDelta)
+
+	updateTimer.TimeFunction = self._adapters["TimeProvider"]
+	updateTimer.UpdateSignal = game:GetService("RunService").Heartbeat
+
+	updateTimer.AllowDrift = false
+
+	updateTimer.Tick:Connect(function()
+		UpdateServerTick(self)
+	end)
+
+	updateTimer:Start()
+
+	self.Connections["ServerTickUpdateTimer"] = updateTimer
+	self.Connections["TimeSinceLastTick"] = nil
+	--[[
 	self.Connections["TimeSinceLastTick"] = nil --//SHOULD NOT BE AN ADAPTER
 
-	self.Connections["ServerTickUpdater"] = game:GetService("RunService").Heartbeat:Connect(function(dt)
+	self.Connections["ServerTickUpdateTimer"] = game:GetService("RunService").Heartbeat:Connect(function(dt)
 		UpdateServerTick(self, IsCheckingResync, dt)
 	end)
+	]]
 end
 
 function Service:OnClose()
-	self.Connections["ServerTickUpdater"]:Disconnect()
+	self.Connections["ServerTickUpdateTimer"]:Stop()
 end
 
 ---

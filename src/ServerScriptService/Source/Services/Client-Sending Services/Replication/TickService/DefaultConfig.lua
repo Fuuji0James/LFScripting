@@ -2,8 +2,9 @@ local LoggedData = {}
 
 return {
 	['Settings'] = {
-		['TickDelta'] = 1/20,
-		['ResetAtTick'] = math.floor(3600/(1/20)),
+		['TickDelta'] = 1/10,
+		['ResetAtTick'] = math.floor(3600/(1/10)),
+		-- ['ResyncTimeout'] = 
 	}, 
 	['Adapters'] = { -- change underlying code & would produce a different effect
 		['TimeProvider'] = os.clock,
@@ -28,7 +29,7 @@ return {
 		['NoLongerPendingResyncs'] = function()
 
 		end,
-		['TickChanged'] = function(self, connection, CurrentTick)
+		['TickChanged'] = function(self, CurrentTick)
 			
 		end,
 	}

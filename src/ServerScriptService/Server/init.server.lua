@@ -1,7 +1,7 @@
 
 local Source = game:GetService("ServerScriptService").Source
 
-local LiveMockTestsAllowed = false -- as in PUBLIC GAME mock tests
+local LiveMockTestsAllowed = true -- as in PUBLIC GAME mock tests
 local ServerBasicPackages = script
 
 local MW = script.MW
