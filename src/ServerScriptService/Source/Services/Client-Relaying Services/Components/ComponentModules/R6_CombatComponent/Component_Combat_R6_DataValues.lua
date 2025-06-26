@@ -6,7 +6,7 @@ return {
 	currentCombo = 1,
 	maxCombo = 3,
 	AnimTime = 0,
-	maxDuration = 0.2,
+	maxDuration = 1,
 
 	currentAnimationTrack = nil,
 	currentChar = Instance.new("Model"),
@@ -20,7 +20,7 @@ return {
 	isWhiffCanceling = false,
 	isFeinting = false,
 	isStartUp = false,
-	isEquipped = false,
+	isEquipped = true,
 
 	canBlock = true,
 	canParry = true,

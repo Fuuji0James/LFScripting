@@ -14,10 +14,10 @@ return {
 	canAttack = true, -- Can attack (set by server or inferred)
 	canBlock = true,
 	canParry = true,
-	canFeint = true,
+	canFeint = false,
 
 	-- Equip State (for visuals or UI restrictions)
-	isEquipped = false,
+	isEquipped = true,
 
 	-- Optional Predictive Flags (used for animations or VFX)
 	isAttacking = false,

@@ -13,17 +13,29 @@ local SetupServiceComms = require(SSS.Source.Services.Helpers.SetupServiceComms)
 
 local BaseComponent = {}
 
+BaseComponent.__index = BaseComponent
+
 function BaseComponent.new(Name: string, Rig: Model, OnInvoke)
 	local Component = {
 		Name = Name,
 		Connections = nil,
 		[`{Name}Set`] = require(ComponentSets[`{Name}_Set`]),
-		[`{Name}DataValues`] = nil,
-
 		IsClient = nil,
 	}
 
-	return Component
+	Component["IsClient"] = Rig:HasTag(Tags.PlayerTag)
+
+	if Component["IsClient"] then
+		Component["IsClient"] = game:GetService("Players"):GetPlayerFromCharacter(Rig)
+	else
+		Component["IsClient"] = Rig
+	end
+
+	Component[`{Name}DataValues`] = Component[`{Name}Set`].new(Component)
+
+	print(Component)
+
+	return setmetatable(Component, BaseComponent)
 end
 
 function BaseComponent:PerformInputOnRig(Input)

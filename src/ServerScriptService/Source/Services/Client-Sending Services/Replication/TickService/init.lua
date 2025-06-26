@@ -7,7 +7,7 @@ local SetupServiceComms = require(script:FindFirstAncestor("Services").Helpers.S
 
 local Service = {
 	["Name"] = script.Name,
-	["TestingFlag"] = true
+	["TestingFlag"] = false,
 }
 Service.__index = Service
 setmetatable(Service, HookBase)
@@ -31,9 +31,8 @@ function CheckIfResyncIsAllowed(self, isCheckingResync, accumulated)
 
 		accumulated += 0.05
 		if
-			self.Settings.TickDelta < (
-				self["States"]._TimeAccumulated - (self.Settings.TickDelta * (0.85 + accumulated))
-			)
+			self.Settings.TickDelta
+			< (self["States"]._TimeAccumulated - (self.Settings.TickDelta * (0.85 + accumulated)))
 		then
 			self["States"].PendResyncs = false
 			self:_emitHook("NoLongerPendingResyncs")

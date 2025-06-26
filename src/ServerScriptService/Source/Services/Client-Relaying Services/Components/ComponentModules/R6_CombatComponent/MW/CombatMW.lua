@@ -24,10 +24,10 @@ local function valueCheck(Value) -- Utility
 	return false
 end
 
-local function GetValuesToCheck(CurrentComponent) -- returns needed values from component
+local function GetValuesToCheck(CurrentComponent, ActionName) -- returns needed values from component
 	local DataValues = CurrentComponent["Component_Combat_R6DataValues"]
 
-	return {
+	local ValuesList = {
 		["Attack"] = DataValues.canAttack,
 		["Feint"] = { DataValues.canFeint, DataValues.isStartUp },
 		["Parry"] = DataValues.canParry,
@@ -35,17 +35,20 @@ local function GetValuesToCheck(CurrentComponent) -- returns needed values from 
 		["BlockEnd"] = DataValues.isBlocking,
 		["Critical"] = DataValues.canAttack,
 	}
+
+	return ValuesList[ActionName]
 end
 
-function CombatMW:CheckValues(CurrentComponent)
-	local ValuesToCheck = GetValuesToCheck(CurrentComponent)
+function CombatMW:CheckValues(CurrentComponent, ActionName)
+	local ValuesToCheck = GetValuesToCheck(CurrentComponent, ActionName)
 
-	if not ValuesToCheck then
+	if ValuesToCheck == nil then
 		warn(`No combat data values were created for player {CurrentComponent.Player}`)
 		return
 	end
 
 	if valueCheck(ValuesToCheck) and CurrentComponent["Component_Combat_R6DataValues"].isEquipped then
+		print("game time")
 		return true
 	else
 		return false

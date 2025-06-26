@@ -1,6 +1,6 @@
 -- {Most Recent: 13/5/2025} //FUUJI
 -- Status: Proto
---///This is bad because it does not have realm access to the instances with components, so if another script requires it and calls the util funcs 
+--///This is bad because it does not have realm access to the instances with components, so if another script requires it and calls the util funcs
 -- 		It won't know what it's talking about. Using _G would be better
 
 local CS = game:GetService("CollectionService")
