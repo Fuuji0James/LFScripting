@@ -13,6 +13,9 @@ local FindValueInTable = require(Libraries.FindValueInTable)
 local TagList = require(_SharedFolder.TagList)
 local TimeNow = require(game:GetService("ReplicatedStorage").Libraries["Debugging Tools"].Helpers.CurrentTime)
 
+local ProxyHandler	   = require(_SharedFolder:WaitForChild("Utility"):WaitForChild("proxytable"))
+local _registry 	   = require(_SharedFolder:WaitForChild("_registry"))
+
 local CachedControllerModules = {} -- Exists for ones they've used before, and may use again
 local RunningControllers = {}
 
@@ -23,7 +26,7 @@ local function addToCachedControllerModules(ComponentName: string): ModuleScript
 	if not CachedControllerModules[ComponentName] then
 		CachedControllerModules[ComponentName] = RequiredControllerModule
 	end
-
+	
 	return RequiredControllerModule
 end
 
@@ -37,8 +40,10 @@ local function instanceAddedToComponent(Component: string)
 	local Controller
 
 	local _, E = pcall(function()
-		Controller = CachedControllerModules[ComponentName].new()
+		Controller = ProxyHandler.new(ComponentName, CachedControllerModules[ComponentName].new()) -- Prone to hacks?
 	end)
+	
+	_registry[ComponentName] = Controller
 
 	if E then
 		warn(E)
@@ -65,6 +70,7 @@ local function instanceRemovedFromComponent(Component: string)
 end
 
 return function (Character: Model)
+	
 	-- Upon Starting
 	for _, Component in Character:GetTags() do
 		if FindValueInTable(Character:GetTags(), Component) then
@@ -77,8 +83,10 @@ return function (Character: Model)
 				local Controller
 
 				local _, E = pcall(function()
-					Controller = CachedControllerModules[ComponentName].new() -- Prone to hacks?
+					Controller = ProxyHandler.new(ComponentName, CachedControllerModules[ComponentName].new()) -- Prone to hacks?
 				end)
+				
+				_registry[ComponentName] = Controller
 
 				if E then
 					warn(E)
