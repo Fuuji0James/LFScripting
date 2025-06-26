@@ -221,7 +221,7 @@ function Service:Run() ---***Have to add in the visualizers stuff too
 	end)
 
 	updateTimer:Start()
-
+	
 	self.Connections["ServerTickUpdateTimer"] = updateTimer
 	self.Connections["TimeSinceLastTick"] = nil
 	--[[
@@ -245,7 +245,7 @@ function Service:GetCurrentTick()
 	if not self["States"].IsRunning then
 		return
 	end
-	return self.CurrentTick
+	return self["States"].CurrentTick
 end
 
 function Service:GetElapsedTime()

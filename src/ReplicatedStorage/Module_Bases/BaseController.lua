@@ -29,7 +29,7 @@ end
 function BindAllInputs(Binds, Tag)
 	for ActionName, Bind in Binds do
 		local Input = Enums[Tag][ActionName]
-		print(Input)
+		-- print(Input)
 		UISBinds:BindToInput(ActionName, Bind, Input)
 	end
 end
@@ -44,7 +44,7 @@ function Controller:Init()
 		-- Other stuff if needed
 	end)
 
-	print(self.Binds)
+	-- print(self.Binds)
 
 	if not CanInit then
 		warn(`{self.Name} for {self.Player} cannot be initialized for reason '{ErrorMsg}'`)
