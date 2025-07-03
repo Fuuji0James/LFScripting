@@ -18,7 +18,7 @@ local Combat = {
 
 local function OnInvoke(Plr, Input)
 	local CurrentComponent = ComponentHandler.GetComponentsFromInstance(Plr.Character, Combat.Tag)
-
+	print(CurrentComponent)
 	if not CombatMW:CheckValues(CurrentComponent, Input) then
 		return
 	end
@@ -53,7 +53,6 @@ end
 
 function Combat.new(Rig: Model)
 	local self = BaseComponent.new(Combat.Tag, Rig, OnInvoke)
-
 	return self
 end
 

@@ -69,11 +69,16 @@ local function loadComponents(Inputs: { Folder | ModuleScript? })
 			--if E then warn(E) end
 
 			InstancesWithComponents[instance][Tag] = ComponentForInstance -- adding the component functions to the instance
+			print(InstancesWithComponents)
 		end
 
 		for _, instance in CS:GetTagged(Tag) do
 			instanceAddedToTagList(instance)
 		end
+
+		CS:GetInstanceAddedSignal(Tag):Connect(function()
+			print("Instance added")
+		end)
 		CS:GetInstanceAddedSignal(Tag):Connect(instanceAddedToTagList)
 		CS:GetInstanceRemovedSignal(Tag):Connect(instanceRemovedFromTagList)
 	end

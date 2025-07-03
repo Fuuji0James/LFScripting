@@ -14,7 +14,6 @@ return {
 	canAttack = true, -- Can attack (set by server or inferred)
 	canBlock = true,
 	canParry = true,
-	canFeint = false,
 
 	-- Equip State (for visuals or UI restrictions)
 	isEquipped = true,

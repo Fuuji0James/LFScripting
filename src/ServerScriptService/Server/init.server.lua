@@ -1,4 +1,3 @@
-
 local Source = game:GetService("ServerScriptService").Source
 
 local LiveMockTestsAllowed = false -- as in PUBLIC GAME mock tests
@@ -9,8 +8,10 @@ local MW = script.MW
 local PlayerAdded = require(script.Testing.PlayerAdded)
 PlayerAdded()
 
-require(MW.InitServices) (Source, LiveMockTestsAllowed)
-require(MW['ECS-Independent']) ()
+wait(0.5)
+
+require(MW.InitServices)(Source, LiveMockTestsAllowed)
+require(MW["ECS-Independent"])()
 
 print("Sever Running")
 
@@ -18,4 +19,3 @@ print("Sever Running")
 --	local LocalPublisher = require(DebugFolder.Utility.LocalPublisher)
 --	LocalPublisher:createLocalAnimationsStudio()
 --end
-

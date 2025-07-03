@@ -131,6 +131,8 @@ end
 function Init(Character: Model)
 	SetupRecievers()
 
+	print(Character:GetTags())
+
 	-- Upon Starting
 	for _, Component in Character:GetTags() do
 		if FindValueInTable(Character:GetTags(), Component) then

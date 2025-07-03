@@ -2,6 +2,7 @@ local RS = game:GetService("ReplicatedStorage")
 local RF = game:GetService("ReplicatedFirst")
 local UIS = game:GetService("UserInputService")
 
+local Hitboxing = require(script.Parent.Hitboxing)
 local AnimationUtil = require(RF._Client.Utility.AnimationUtil)
 local Promise = require(RS.Libraries.promise)
 
@@ -17,11 +18,11 @@ return {
 					DataValues.canAttack = false
 					DataValues.canBlock = false
 					DataValues.canParry = false
-					DataValues.canFeint = true
 
 					local ServerValue = RemFunc:InvokeServer(ActionName)
 					local AttackTrack: AnimationTrack = AnimationUtil.CachedTracks[`Attack{ServerValue}`]
 					AttackTrack:Play()
+					DataValues.currentAnim = AttackTrack
 
 					task.delay(AttackTrack.Length, function()
 						DataValues.canAttack = true
@@ -31,13 +32,30 @@ return {
 					end)
 
 					_Connection = AttackTrack.KeyframeReached:Connect(function(kfname)
+						local Character = self.Rig
+						local ClientToServerRem: RemoteEvent =
+							RS.Comms.Component_Combat_R6_Remotes.Component_Combat_R6_ClientToServerEvent
+
 						if kfname == "Active" then
+							local Hitbox = Hitboxing.Create()
+
+							Hitbox.Character = Character
+							Hitbox.CFrame = CFrame.new(0, 0, -4)
+							Hitbox.Size = Vector3.new(5, 5, 5)
+							Hitbox.Visualizer = true
+
+							Hitbox:Visualize()
+							local ene_hum = Hitbox:FindHum(Character)
+
+							if ene_hum then
+								print("zerp")
+								ClientToServerRem:FireServer(ene_hum)
+							end
 							resolve(ServerValue)
 						end
 					end)
 				end):andThen(function(ServerValue)
 					if _Connection then
-						print(ServerValue)
 						DataValues.currentCombo = ServerValue
 						_Connection:Disconnect()
 					end
@@ -66,7 +84,15 @@ return {
 
 	Feint = function(ActionName, UserInputState, InputObject: InputObject, self)
 		if UserInputState == Enum.UserInputState.Begin then
-			print("feint")
+			local ServerValue = RemFunc:InvokeServer(ActionName)
+
+			if ServerValue then
+				local DataValues = self.ClientDataValues
+				local currentAnim: AnimationTrack = DataValues.currentAnim
+				if currentAnim then
+					currentAnim:Stop()
+				end
+			end
 		end
 	end,
 

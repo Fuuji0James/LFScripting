@@ -7,6 +7,8 @@ local Tags = require(game:GetService("ReplicatedFirst")._Shared.TagList)
 local function onCharacterAdded(Chr)
 	local player = Players:GetPlayerFromCharacter(Chr)
 
+	print("duh")
+
 	if not player then
 		return
 	end
@@ -40,6 +42,8 @@ local function safePlayerAdded(callback: (Player) -> ())
 	for _, player in Players:GetPlayers() do
 		task.spawn(callback, player)
 	end
+
+	print("du")
 
 	return Players.PlayerAdded:Connect(callback)
 end
