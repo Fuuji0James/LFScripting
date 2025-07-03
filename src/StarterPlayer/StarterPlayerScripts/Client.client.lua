@@ -19,7 +19,7 @@ local CachedControllerModules = {} -- Exists for ones they've used before, and m
 local RunningControllers = {}
 
 ---
-local LiveMockTestsAllowed = false -- as in PUBLIC GAME mock tests
+local LiveMockTestsAllowed = true -- as in PUBLIC GAME mock tests
 
 -- Privates
 
@@ -71,56 +71,58 @@ local function instanceRemovedFromComponent(Component: string)
 	RunningControllers[ComponentName] = nil
 end
 
-local function SetupRecievers()
-	for _, Receiver in ClientReceiversFolder:GetDescendants() do
-		coroutine.wrap(function()
-			if Receiver:IsA("ModuleScript") and not (string.match(Receiver.Name, "^__Template")) then
-				local Ms = require(Receiver)
+local function InitHookedReceiver(LiveMockTestsAllowed, Receiver)
+	--coroutine.wrap(function()
+	if Receiver:IsA("ModuleScript") and not (string.match(Receiver.Name, "^__Template")) then
+		local Ms = require(Receiver)
 
-				if typeof(Ms) == "table" then
-					if Ms.new and Ms.Run then -- has this life cycle
-						local MockTestMs = require(Receiver:WaitForChild("MockTests"))
-						local MockTestingConfig: {} = nil
-						local TestThisReceiver = false
+		if typeof(Ms) == "table" then
+			if Ms.new and Ms.Run and not Ms.Tag then -- has a life cycle, and doesn't have a tag for components
+				local MockTestMs = if Receiver:FindFirstChild("MockTests")
+					then require(Receiver:WaitForChild("MockTests"))
+					else nil
+				local MockTestingConfig: {} = nil
+				local TestThisService = false
 
-						if MockTestMs.TestingFlag then
-							if
-								LiveMockTestsAllowed
-								or (LiveMockTestsAllowed == false and game:GetService("RunService"):IsStudio())
-							then
-								TestThisReceiver = true
+				if MockTestMs then
+					if Ms.TestingFlag then
+						if
+							LiveMockTestsAllowed
+							or (LiveMockTestsAllowed == false and game:GetService("RunService"):IsStudio())
+						then
+							TestThisService = true
 
-								if MockTestMs.SetupTestConfig then
-									MockTestingConfig = MockTestMs:SetupTestConfig()
+							if MockTestMs.SetupTestConfig then
+								MockTestingConfig = MockTestMs:SetupTestConfig()
+
+								if not MockTestingConfig then
+									print(
+										`Mock tests should return their config? | Take off the testing flag to silence. @{Receiver}`
+									)
 								end
 							end
 						end
-
-						local ReceiverMs = Ms.new(MockTestingConfig) -- using it (its nil if conditions arent met BTW)
-
-						ReceiverMs:Run()
-
-						if TestThisReceiver then
-							MockTestMs:StartTest(ReceiverMs) -- do ur own scenario or wtv
-						end
-
-						--Ms.IsRunning = true -- make sure all rec. have this
-
-						if ReceiverMs.OnClose then
-							game.Players.LocalPlayer.AncestryChanged:Connect(function(_, parent)
-								if not parent then
-									ReceiverMs:OnClose()
-								end
-							end)
-						else
-							print(
-								`Why does module '{Receiver.Name}' not have an OnClose Function if it initializes with .new()?`
-							)
-						end
 					end
+
+					local ReceiverMs = Ms.new(MockTestingConfig) -- using it (its nil if conditions arent met BTW)
+
+					ReceiverMs:Run()
+
+					if TestThisService then
+						MockTestMs:StartTest(ReceiverMs) -- do ur own scenario or wtv
+					end
+
+					--Ms.IsRunning = true -- make sure all services have this
 				end
 			end
-		end)()
+		end
+	end
+	--end)()
+end
+
+local function SetupRecievers()
+	for _, Receiver in ClientReceiversFolder:GetDescendants() do
+		InitHookedReceiver(LiveMockTestsAllowed, Receiver)
 	end
 end
 
@@ -182,4 +184,4 @@ local Character = Players.LocalPlayer.Character or Players.LocalPlayer.Character
 Init(Character)
 
 print(`Controller Modules Cached:`, CachedControllerModules)
-print(`Running Controllers Loaded at {TimeNow}:`, RunningControllers)
+print(`Running Controllers Loaded at {TimeNow()}:`, RunningControllers)
