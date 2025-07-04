@@ -17,7 +17,6 @@ return {
 	isBlocking = false,
 	isParrying = false,
 	isAttacking = false,
-	isWhiffCanceling = false,
 	isFeinting = false,
 	isStartUp = false,
 	isEquipped = true,
@@ -26,5 +25,10 @@ return {
 	canParry = true,
 	canAttack = true,
 	canFeint = true,
-	WPNmetatable = {},
+
+	-- Weapon Specific Values
+	-- wpnType = "Greatsword", -- Type of weapon, add later
+	wpnName = "Greatsword",
+	wpnAnimationSet = {},
+	wpnHitboxSize = Vector3.new(5, 5, 5),
 }

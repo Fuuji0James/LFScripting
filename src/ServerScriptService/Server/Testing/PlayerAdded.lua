@@ -1,8 +1,11 @@
 -- {Most Recent: 13/5/2025} //FUUJI
 -- Status: Proto
 
+local Workspace = game:GetService("Workspace")
 local Players = game:GetService("Players")
 local Tags = require(game:GetService("ReplicatedFirst")._Shared.TagList)
+
+local ServerLoaded = Workspace:GetAttribute("ServerLoaded")
 
 local function onCharacterAdded(Chr)
 	local player = Players:GetPlayerFromCharacter(Chr)
@@ -10,6 +13,13 @@ local function onCharacterAdded(Chr)
 	if not player then
 		return
 	end
+
+	while not Workspace:GetAttribute("ServerLoaded") do
+		warn("Server not loaded yet, delaying tag addition for: " .. player.Name)
+		Workspace:GetAttributeChangedSignal("ServerLoaded"):Wait()
+	end
+
+	print("Player added: " .. player.Name)
 
 	Chr:AddTag(Tags.PlayerTag)
 	Chr:AddTag(Tags.Components.Combat)

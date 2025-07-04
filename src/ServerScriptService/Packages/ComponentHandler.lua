@@ -68,6 +68,8 @@ local function loadComponents(Inputs: { Folder | ModuleScript? })
 
 			--if E then warn(E) end
 
+			print(`Adding {instance.Name} to {Tag} with component {ComponentForInstance}`)
+
 			InstancesWithComponents[instance][Tag] = ComponentForInstance -- adding the component functions to the instance
 		end
 

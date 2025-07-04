@@ -15,10 +15,12 @@ local BaseComponent = {}
 
 BaseComponent.__index = BaseComponent
 
+--keep the requires...
+
 function BaseComponent.new(Name: string, Rig: Model, OnInvoke)
 	local Component = {
 		Name = Name,
-		Connections = nil,
+		Connections = {},
 		[`{Name}Set`] = require(ComponentSets[`{Name}_Set`]),
 		IsClient = nil,
 	}
@@ -67,31 +69,12 @@ function BaseComponent:PerformInputOnRig(Input)
 	return promise
 end
 
-function BaseComponent:Destroy(Message: string, Component)
-	local Name = Component.Rig.Name
-
-	-- Destroying remotes
-	for _, Remote: Instance in Component["Listeners"] do
-		if not Remote then
-			continue
-		end
-		if typeof(Remote) == "Instance" then
-			Remote:Destroy()
-		end
-	end
-
-	-- Destroying Folders
-	for _, Folder: Folder in Component.CreatedFolders do
-		if not Folder then
-			continue
-		end
-		if typeof(Folder) == "Instance" then
-			Folder:Destroy()
-		end
-	end
+function BaseComponent:Destroy(Message: string?)
+	local Client = self["IsClient"]
+	local Name = Client.Name
 
 	-- Destroying Connections
-	for _, Connection: RBXScriptConnection in Component.Connections do
+	for _, Connection: RBXScriptConnection in self.Connections do
 		if not Connection then
 			continue
 		end
@@ -100,9 +83,9 @@ function BaseComponent:Destroy(Message: string, Component)
 		end
 	end
 
-	setmetatable(Component, nil)
+	setmetatable(self, nil)
 
-	print(`[End] || {Component.Name} Component for {Name} was Destroyed due to '{Message or "Unknown Disconnection"}'.`)
+	print(`[End] || {self.Name} Component for {Name} was Destroyed due to '{Message or "Unknown Disconnection"}'.`)
 end
 
 return BaseComponent
