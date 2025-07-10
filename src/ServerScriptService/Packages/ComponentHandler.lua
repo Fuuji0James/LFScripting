@@ -9,7 +9,7 @@ local ComponentHandler = {}
 local InstancesWithComponents = {}
 local ModuleScriptsLoadedInGame = {}
 
-local function loadComponents(Inputs: { Folder | ModuleScript? })
+local function loadComponents(Inputs)
 	for _, ModuleScript in Inputs do
 		if typeof(ModuleScript) ~= "Instance" then
 			continue
@@ -93,7 +93,7 @@ ComponentHandler.AddComponentToGame = function(Input: any)
 	end
 end
 
-ComponentHandler.GetComponentFromGame = function(Tag: string): ModuleScript
+ComponentHandler.GetComponentFromGame = function(Tag: string)
 	if not Tag then
 		warn("No component name provided")
 		return

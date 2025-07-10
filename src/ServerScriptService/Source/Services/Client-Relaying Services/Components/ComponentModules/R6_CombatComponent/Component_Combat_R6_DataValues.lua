@@ -27,7 +27,7 @@ return {
 	canFeint = true,
 
 	-- Weapon Specific Values
-	-- wpnType = "Greatsword", -- Type of weapon, add later
+	wpnType = "Greatsword", -- Type of weapon, add later
 	wpnName = "Greatsword",
 	wpnAnimationSet = {},
 	wpnHitboxSize = Vector3.new(5, 5, 5),
