@@ -7,7 +7,9 @@ local TagList = require(RF._Shared.TagList)
 local MathChecks = require(SSS.Packages.Utility.MathChecks)
 local Promise = require(RS.Libraries.promise)
 local ComponentHandler = require(SSS.Packages.ComponentHandler)
+local _registry = require(RF._Shared._registry)
 local GetCombatValuesFor = require(script.GetCombatValues)
+local PreloadAnimations = require(SSS.Packages.Utility.PreloadAnimations)
 
 local CombatSet = {}
 CombatSet.__index = CombatSet
@@ -57,15 +59,13 @@ CombatSet.new = function(DataTable)
 		CombatDataValues[i] = v -- Cant set the values to eachother for obv reasons
 	end
 
-	local WPNAnimations = AnimationFolder[CombatDataValues.wpnName]
+	local WPNAnimations = AnimationFolder[CombatDataValues.wpnName] -- WPN animation
 	if WPNAnimations then
-		for i, v in WPNAnimations:GetChildren() do
-			if v:IsA("Animation") then
-				ContentProvider:PreloadAsync({ v }) -- Preloads the animation
-				CombatDataValues.wpnAnimationSet[v.Name] = DataTable["IsClient"].Character.Humanoid:LoadAnimation(v)
-					or DataTable["IsClient"]:FindFirstChildOfClass("Animator"):LoadAnimation(v)
-			end
-		end
+		CombatDataValues.wpnAnimationSet = PreloadAnimations(
+			WPNAnimations,
+			DataTable["IsClient"].Character.Humanoid.Animator
+				or DataTable["IsClient"].Character:FindFirstChildOfClass("Animator")
+		) -- Preload the animations
 	else
 		warn(`Weapon animations for {CombatDataValues.wpnName} not found!`)
 	end
@@ -98,6 +98,8 @@ function CombatSet.Attack(CurrentComponentTable)
 
 		DataTable.currentAnimationTrack = DataTable.wpnAnimationSet[`Attack{DataTable.currentCombo}`]
 
+		print(DataTable.currentAnimationTrack)
+
 		onCancel(function() -- If feinted
 			DataTable.canAttack = true
 			DataTable.canBlock = true
@@ -111,6 +113,8 @@ function CombatSet.Attack(CurrentComponentTable)
 
 		CurrentComponentTable["Connections"]["Attack"] = RecieveHumanoidEvent.OnServerEvent:Connect( -- When server recieves the humanoid from attack
 			function(plr, ene_humanoid)
+				local ParticleService = _registry["ParticleService"]
+				local AnimationService = _registry["AnimationService"]
 				print("attack received")
 				if
 					not MathChecks:dotCheck(CurrentComponentTable.IsClient.Character, ene_humanoid.Parent)
@@ -127,6 +131,16 @@ function CombatSet.Attack(CurrentComponentTable)
 				elseif Ene_CombatDataValues.isBlocking then
 					print("you got blocked")
 				else
+					local ene_HRP = ene_humanoid.Parent:FindFirstChild("HumanoidRootPart")
+
+					AnimationService:PlayAnimationOnRig(CurrentComponentTable["IsClient"], ene_humanoid.Parent, "Stun1")
+					ParticleService:PlayVFXAt(
+						{ ene_HRP.RootAttachment },
+						"DismantleProjectile",
+						CFrame.new(0, 0, 0),
+						10,
+						10
+					)
 					ene_humanoid.Health -= 5
 				end
 			end
@@ -154,7 +168,7 @@ function CombatSet.Attack(CurrentComponentTable)
 		DataTable.canBlock = true
 		DataTable.canParry = true
 		DataTable.lastAttacked = tick()
-
+		DataTable.currentAnimationTrack = nil
 		if DataTable.currentCombo > 3 then
 			DataTable.currentCombo = 1
 		end
@@ -168,7 +182,7 @@ function CombatSet.Feint(CurrentComponentTable)
 
 	if DataTable.canFeint and DataTable.isStartUp then
 		DataTable.attackPromise:cancel()
-		local promise = Promise.new(function(resolve, reject, onCancel)
+		local _promise = Promise.new(function(resolve, reject, onCancel)
 			DataTable.canFeint = false
 			task.wait(2.5)
 			DataTable.canFeint = true
@@ -181,18 +195,66 @@ end
 
 function CombatSet.Critical(CurrentComponentTable)
 	local DataTable = CurrentComponentTable[`{CurrentComponentTable.Name}DataValues`]
+
+	return DataTable
 end
 
 function CombatSet.Parry(CurrentComponentTable)
 	local DataTable = CurrentComponentTable[`{CurrentComponentTable.Name}DataValues`]
+
+	DataTable.parryPromise = Promise.new(function(resolve, reject, onCancel)
+		DataTable.canParry = false
+		DataTable.canAttack = false
+
+		DataTable.isParrying = true
+		DataTable.currentAnimationTrack = DataTable.wpnAnimationSet["ParryAnim"]
+
+		onCancel(function() -- Start Blocking
+			DataTable.isParrying = false
+			DataTable.isBlocking = true
+
+			DataTable.currentAnimationTrack = DataTable.wpnAnimationSet["BlockAnim"]
+
+			DataTable.canBlock = false
+			DataTable.canParry = false
+			DataTable.canAttack = false
+		end)
+
+		task.wait(DataTable.currentAnimationTrack.Length + 0.2)
+		resolve()
+	end)
+
+	DataTable.parryPromise:andThen(function()
+		DataTable.canParry = true
+		DataTable.canAttack = true
+		DataTable.isParrying = false
+
+		DataTable.currentAnimationTrack = nil
+	end)
+
+	return DataTable
 end
 
 function CombatSet.Block(CurrentComponentTable)
 	local DataTable = CurrentComponentTable[`{CurrentComponentTable.Name}DataValues`]
+
+	if DataTable.parryPromise then
+		DataTable.parryPromise:cancel()
+	end
+
+	return DataTable
 end
 
 function CombatSet.BlockEnd(CurrentComponentTable)
 	local DataTable = CurrentComponentTable[`{CurrentComponentTable.Name}DataValues`]
+
+	DataTable.isBlocking = false
+
+	DataTable.canBlock = true
+	DataTable.canParry = true
+	DataTable.canAttack = true
+
+	return DataTable
 end
 
 return CombatSet

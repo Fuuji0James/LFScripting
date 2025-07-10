@@ -1,13 +1,26 @@
 local CS = game:GetService("ContentProvider")
 
 local LoadAnims = {
-	CachedTracks = {},
-	CachedAnims = {},
+	Registry = {},
 }
 
-function LoadAnims:PreloadAnims(AnimationsList: {})
+LoadAnims.__index = LoadAnims
+
+function LoadAnims.new(Player)
+	local self = setmetatable({
+		Name = Player.Name,
+		CachedAnims = {},
+		CachedTracks = {},
+	}, LoadAnims)
+
+	LoadAnims.Registry[self.Name] = self
+
+	return self
+end
+
+function LoadAnims:PreloadAnims(AnimationsList)
 	-- clear cached anims
-	LoadAnims.CachedAnims = {}
+	self.CachedAnims = {}
 
 	local LoadedAnims = {}
 
@@ -16,18 +29,19 @@ function LoadAnims:PreloadAnims(AnimationsList: {})
 			if Animation:IsA("Animation") then
 				CS:PreloadAsync(AnimationsList)
 				LoadedAnims[Animation.Name] = Animation
-				LoadAnims.CachedAnims[Animation.Name] = Animation
+				self.CachedAnims[Animation.Name] = Animation
 			end
 		end
 	elseif typeof(AnimationsList) == "Instance" then
-		for _, Animation: Instance in AnimationsList:GetDescendants() do
+		for _, Animation in pairs(AnimationsList:GetDescendants()) do
 			if Animation:IsA("Animation") then
-				CS:PreloadAsync({ Animation })
 				LoadedAnims[Animation.Name] = Animation
-				LoadAnims.CachedAnims[Animation.Name] = Animation
+				self.CachedAnims[Animation.Name] = Animation
 			end
 		end
 	end
+
+	print(self)
 
 	--[[AnimationsAdded.OnClientEvent:Connect(function(Animation: Animation, State: string)
 		if State == "LoadTrack" then
@@ -35,26 +49,27 @@ function LoadAnims:PreloadAnims(AnimationsList: {})
 		end
 		CS:PreloadAsync({ Animation })
 		LoadedAnims[Animation.Name] = Animation
-		LoadAnims.CachedAnims[Animation.Name] = Animation
+		self.CachedAnims[Animation.Name] = Animation
 	end)]]
 
 	return LoadedAnims
 end
 
-function LoadAnims:LoadAnimsOnTrack(AnimationsList: {}, Animator: Animator)
+function LoadAnims:LoadAnimsOnTrack(AnimationsList, Animator)
 	-- clear cached tracks
-	LoadAnims.CachedTracks = {}
+	self.CachedTracks = {}
 
 	local LoadedAnims = {}
-
-	AnimationsList = LoadAnims:PreloadAnims(AnimationsList)
+	print(Animator.Parent.Parent)
+	AnimationsList = self:PreloadAnims(AnimationsList)
 
 	if typeof(AnimationsList) == "table" then
+		print(AnimationsList)
 		for _, Animation in AnimationsList do
 			if Animation:IsA("Animation") then
 				local AnimTrack = Animator:LoadAnimation(Animation)
 				LoadedAnims[Animation.Name] = AnimTrack
-				LoadAnims.CachedTracks[Animation.Name] = AnimTrack
+				self.CachedTracks[Animation.Name] = AnimTrack
 			end
 		end
 	elseif typeof(AnimationsList) == "Instance" then
@@ -62,7 +77,7 @@ function LoadAnims:LoadAnimsOnTrack(AnimationsList: {}, Animator: Animator)
 			if Animation:IsA("Animation") then
 				local AnimTrack = Animator:LoadAnimation(Animation)
 				LoadedAnims[Animation.Name] = AnimTrack
-				LoadAnims.CachedTracks[Animation.Name] = AnimTrack
+				self.CachedTracks[Animation.Name] = AnimTrack
 			end
 		end
 	end
@@ -75,6 +90,8 @@ function LoadAnims:LoadAnimsOnTrack(AnimationsList: {}, Animator: Animator)
 		LoadedAnims[Animation.Name] = AnimTrack
 		LoadAnims.CachedTracks[Animation.Name] = AnimTrack
 	end)]]
+
+	print(LoadedAnims)
 
 	return LoadedAnims
 end

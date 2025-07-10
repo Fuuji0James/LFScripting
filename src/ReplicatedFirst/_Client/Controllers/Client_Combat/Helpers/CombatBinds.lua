@@ -3,8 +3,8 @@ local RF = game:GetService("ReplicatedFirst")
 local UIS = game:GetService("UserInputService")
 
 local Hitboxing = require(script.Parent.Hitboxing)
-local AnimationUtil = require(RF._Client.Utility.AnimationUtil)
 local Promise = require(RS.Libraries.promise)
+local AnimationUtil = require(RF._Client.Utility.AnimationUtil)
 
 local RemFunc: RemoteFunction = RS.Comms.Component_Combat_R6_Remotes.Component_Combat_R6_ClientToServer
 
@@ -16,19 +16,21 @@ return {
 				local _Connection = nil
 				local _promise = Promise.new(function(resolve, reject, onCancel)
 					DataValues.canAttack = false
-					DataValues.canBlock = false
-					DataValues.canParry = false
 
 					local ServerValue = RemFunc:InvokeServer(ActionName)
-					local AttackTrack: AnimationTrack = AnimationUtil.CachedTracks[`Attack{ServerValue}`]
-					AttackTrack:Play()
-					DataValues.currentAnim = AttackTrack
 
+					if not ServerValue then
+						DataValues.canAttack = true
+						reject("Server rejected the attack")
+						return
+					end
+					local CachedAnims = AnimationUtil.Registry[self.Player.Name]
+					local AttackTrack: AnimationTrack = CachedAnims.CachedTracks[`Attack{ServerValue}`]
+
+					DataValues.currentAnim = AttackTrack
+					AttackTrack:Play()
 					task.delay(AttackTrack.Length, function()
 						DataValues.canAttack = true
-						DataValues.canBlock = true
-						DataValues.canParry = true
-						DataValues.canFeint = false
 					end)
 
 					_Connection = AttackTrack.KeyframeReached:Connect(function(kfname)
@@ -64,21 +66,51 @@ return {
 		end
 	end,
 
-	Block = function(ActionName, UserInputState, InputObject: InputObject, self)
-		if UserInputState == Enum.UserInputState.Begin then
-			print("block")
-		end
-	end,
-
 	BlockEnd = function(ActionName, UserInputState, InputObject: InputObject, self)
 		if UserInputState == Enum.UserInputState.End then
-			print("blocking ended")
+			local DataValues = self.ClientDataValues
+			if DataValues.isBlocking then
+				if DataValues.parryConnection then
+					DataValues.parryConnection:Disconnect()
+				end
+
+				local CachedAnims = AnimationUtil.Registry[self.Player.Name]
+
+				local BlockTrack: AnimationTrack = CachedAnims.CachedTracks["BlockAnim"]
+				BlockTrack:Stop()
+				DataValues.isBlocking = false
+
+				local _BlockEnd = RemFunc:InvokeServer(ActionName)
+			end
 		end
 	end,
 
 	Parry = function(ActionName, UserInputState, InputObject: InputObject, self)
 		if UserInputState == Enum.UserInputState.Begin then
-			print("parry")
+			local DataValues = self.ClientDataValues
+			if DataValues.canParry == true then
+				local CachedAnims = AnimationUtil.Registry[self.Player.Name]
+
+				local ParryTrack: AnimationTrack = CachedAnims.CachedTracks["ParryAnim"]
+				ParryTrack:Play()
+
+				local ServerValue = RemFunc:InvokeServer(ActionName)
+				if ServerValue then
+					DataValues.parryConnection = ParryTrack.KeyframeReached:Connect(function(name)
+						if name == "ParryEnd" and UIS:IsKeyDown(Enum.KeyCode.F) then
+							local BlockTrack: AnimationTrack = CachedAnims.CachedTracks["BlockAnim"]
+
+							DataValues.isBlocking = true
+							ActionName = "Block"
+
+							BlockTrack:Play()
+							local _Block = RemFunc:InvokeServer(ActionName)
+						end
+					end)
+				else
+					ParryTrack:Stop()
+				end
+			end
 		end
 	end,
 

@@ -38,7 +38,6 @@ local function OnInvoke(Plr, Input)
 
 	CurrentComponent["Component_Combat_R6DataValues"] = ReturnedCombatDataValues
 
-	print(CurrentComponent["Component_Combat_R6DataValues"].currentCombo)
 	return CurrentComponent["Component_Combat_R6DataValues"].currentCombo
 end
 
