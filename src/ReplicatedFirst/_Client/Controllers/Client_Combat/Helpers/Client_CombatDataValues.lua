@@ -28,4 +28,5 @@ return {
 
 	-- Parry Connection
 	parryConnection = nil,
+	attackConnection = nil,
 }

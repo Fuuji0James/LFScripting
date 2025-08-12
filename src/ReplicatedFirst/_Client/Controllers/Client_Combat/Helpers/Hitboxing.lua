@@ -23,11 +23,13 @@ hitbox.Create = function() -- returns a metatable with a list of parameters for 
 		Visualizer = true, -- Whether or not you want it to visualize
 
 		OverlapParams = OverlapParams.new(),
+		HitCallBack = function() end,
 		Hitlist = {},
 
 		Size = Vector3.new(0, 0, 0), -- Size of the radius/box
 		CFrame = CFrame.new(0, 0, 0), -- CFrame of the hitbox
 		Shape = Enum.PartType.Block, -- Shape of the hitbox
+		ActiveTime = 0.2,
 	}, hitbox)
 end
 
@@ -54,7 +56,7 @@ function hitbox:Visualize() -- Visualizes the hitbox if the parameter is set to 
 	hitboxvis.Anchored = true
 	hitboxvis.Transparency = 0.5
 
-	task.delay(0.2, function()
+	task.delay(self.ActiveTime, function()
 		Debris:AddItem(hitboxvis, 0)
 		RunService:UnbindFromRenderStep("VisUpdHitbox")
 	end)
@@ -113,6 +115,27 @@ function hitbox:FindHum(chr: Model)
 		end
 	end
 	return
+end
+
+function hitbox:Start()
+	if not self.Character:FindFirstChild("HumanoidRootPart") then
+		return
+	end
+
+	local startTime = tick()
+
+	RunService:BindToRenderStep("HitboxActive_" .. tostring(self), Enum.RenderPriority.Last.Value, function()
+		local now = tick()
+		if now - startTime >= self.ActiveTime then
+			RunService:UnbindFromRenderStep("HitboxActive_" .. tostring(self))
+			return
+		end
+
+		local e_hum = self:FindHum(self.Character)
+		if e_hum then
+			self.HitCallBack(e_hum) -- Calls the callback function with the enemy humanoid as a parameter.
+		end
+	end)
 end
 
 return hitbox

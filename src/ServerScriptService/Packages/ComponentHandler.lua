@@ -107,6 +107,7 @@ ComponentHandler.GetComponentsFromInstance = function(instance: Instance, Tag: s
 		if not InstancesWithComponents[instance] then
 			return
 		end
+
 		return InstancesWithComponents[instance][Tag]
 	else
 		if not InstancesWithComponents[instance] then
