@@ -13,7 +13,7 @@ function Checks:magnitudeCheck(Character, Ene_Character)
 
 	local Dist = (ourHRP.Position - ene_HRP.Position).Magnitude
 
-	if Dist <= 6 then
+	if Dist <= 8 then
 		return true
 	else
 		return false

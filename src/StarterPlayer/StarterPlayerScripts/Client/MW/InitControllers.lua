@@ -1,6 +1,7 @@
 local RS = game:GetService("ReplicatedStorage")
 local RF = game:GetService("ReplicatedFirst")
 local CS = game:GetService("CollectionService")
+local Workspace = game:GetService("Workspace")
 
 local _ClientFolder = RF._Client
 local _SharedFolder = RF._Shared
@@ -13,8 +14,8 @@ local FindValueInTable = require(Libraries.FindValueInTable)
 local TagList = require(_SharedFolder.TagList)
 local TimeNow = require(game:GetService("ReplicatedStorage").Libraries["Debugging Tools"].Helpers.CurrentTime)
 
-local ProxyHandler	   = require(_SharedFolder:WaitForChild("Utility"):WaitForChild("proxytable"))
-local _registry 	   = require(_SharedFolder:WaitForChild("_registry"))
+local ProxyHandler = require(_SharedFolder:WaitForChild("Utility"):WaitForChild("proxytable"))
+local _registry = require(_SharedFolder:WaitForChild("_registry"))
 
 local CachedControllerModules = {} -- Exists for ones they've used before, and may use again
 local RunningControllers = {}
@@ -26,7 +27,7 @@ local function addToCachedControllerModules(ComponentName: string): ModuleScript
 	if not CachedControllerModules[ComponentName] then
 		CachedControllerModules[ComponentName] = RequiredControllerModule
 	end
-	
+
 	return RequiredControllerModule
 end
 
@@ -42,7 +43,7 @@ local function instanceAddedToComponent(Component: string)
 	local _, E = pcall(function()
 		Controller = ProxyHandler.new(ComponentName, CachedControllerModules[ComponentName].new()) -- Prone to hacks?
 	end)
-	
+
 	_registry[ComponentName] = Controller
 
 	if E then
@@ -69,8 +70,14 @@ local function instanceRemovedFromComponent(Component: string)
 	RunningControllers[ComponentName] = nil
 end
 
-return function (Character: Model)
-	
+return function(Character: Model)
+	if #Character:GetTags() == 0 then
+		warn(`Character {Character.Name} has no tags, delaying controller initialization.`)
+		while not Workspace:GetAttribute("ServerLoaded") do
+			Workspace:GetAttributeChangedSignal("ServerLoaded"):Wait()
+		end
+	end
+
 	-- Upon Starting
 	for _, Component in Character:GetTags() do
 		if FindValueInTable(Character:GetTags(), Component) then
@@ -85,7 +92,7 @@ return function (Character: Model)
 				local _, E = pcall(function()
 					Controller = ProxyHandler.new(ComponentName, CachedControllerModules[ComponentName].new()) -- Prone to hacks?
 				end)
-				
+
 				_registry[ComponentName] = Controller
 
 				if E then
@@ -119,4 +126,3 @@ return function (Character: Model)
 	print(`Controller Modules Cached:`, CachedControllerModules)
 	print(`Running Controllers Loaded at {TimeNow()}:`, RunningControllers)
 end
-

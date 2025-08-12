@@ -8,7 +8,6 @@ return {
 
 	-- Cooldowns & Timing
 	lastAttackTime = 0, -- Timestamp of last attack
-	attackCooldown = 0.2, -- Max cooldown between combo hits (copied from server)
 
 	-- Ability Flags (used for UI / control responsiveness)
 	canAttack = true, -- Can attack (set by server or inferred)
@@ -26,4 +25,8 @@ return {
 
 	-- Animation
 	currentAnim = nil, -- Track current playing animation if needed
+
+	-- Parry Connection
+	parryConnection = nil,
+	attackConnection = nil,
 }

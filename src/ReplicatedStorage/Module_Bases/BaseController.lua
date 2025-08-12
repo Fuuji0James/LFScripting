@@ -6,6 +6,7 @@ local Enums = require(RF._Shared.Utility.Enums)
 local UISBinds = require(RF._Client.Utility.UserInputBinds)
 local TagList = require(RF._Shared.TagList)
 local AnimationUtil = require(RF._Client.Utility.AnimationUtil)
+local VFXUtil = require(RF._Client.Utility.VFXUtil)
 
 local Controller = {}
 
@@ -18,6 +19,7 @@ function Controller.new(Tag)
 
 		Connections = {},
 		Animations = {},
+		VFX = {},
 		Binds = {},
 		ClientDataValues = {},
 
@@ -27,7 +29,6 @@ function Controller.new(Tag)
 
 	return self
 end
-
 
 function BindAllInputs(self)
 	for ActionName, Bind in self.Binds do
@@ -40,16 +41,27 @@ function LoadAnimations(self)
 	local Tag = self.Name
 
 	local AnimsFolder = RF._Client.Animations[Tag]
-	local Animations = AnimationUtil:LoadAnimsOnTrack(AnimsFolder, self["Rig"].Humanoid.Animator)
+
+	local AnimsCache = AnimationUtil.new(self.Player)
+	local Animations = AnimsCache:LoadAnimsOnTrack(AnimsFolder, self["Rig"].Humanoid.Animator)
 
 	return Animations
+end
+
+function LoadVFX(self)
+	local Tag = self.Name
+	local VFXFolder = RF._Client.VFX[Tag]
+
+	local VFXCache = VFXUtil.new(self.Player)
+	local VFX = VFXCache:PreLoadVFX(VFXFolder)
+
+	return VFX
 end
 
 function Controller:Init()
 	if self["Initialized"] then
 		return
 	end
-
 	local CanInit, ErrorMsg = pcall(function()
 		local _Listeners = RS.Comms[`{TagList.Components.Combat}_Remotes`]
 		-- Other stuff if needed
@@ -64,6 +76,7 @@ function Controller:Init()
 		-- All listeners and everything was setup so we...
 		BindAllInputs(self)
 		self["Animations"] = LoadAnimations(self)
+		self["VFX"] = LoadVFX(self)
 
 		print(`{self.Name} is Initialized [Controller]`)
 		self["Initialized"] = true
