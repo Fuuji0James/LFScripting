@@ -28,7 +28,6 @@ local function OnInvoke(Plr, Input)
 
 	promise
 		:andThen(function(ReturnedValue)
-			print(ReturnedValue)
 			ReturnedCombatDataValues = ReturnedValue
 		end)
 		:catch(function(ErrorMsg)

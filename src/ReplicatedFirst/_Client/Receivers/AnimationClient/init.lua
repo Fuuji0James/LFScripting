@@ -15,9 +15,12 @@ Reciever.__index = Reciever
 -- Bind to server event
 
 function BindToRecievers()
-	local RemEvent = Comms:WaitForChild("PlayAnimationOnRig")
+	local PlayRemEvent: RemoteEvent = Comms:WaitForChild("PlayAnimationOnRig")
+	local StopRemEvent: RemoteEvent = Comms:WaitForChild("StopAnimationOnRig")
 
-	RemEvent.OnClientEvent:Connect(function(animationName, targetRig)
+	local NPCCachedTracks = {}
+
+	PlayRemEvent.OnClientEvent:Connect(function(animationName, targetRig)
 		local Player = game.Players.LocalPlayer
 		local AnimsCache = AnimationUtil.Registry[Player.Name]
 		if not targetRig then
@@ -27,9 +30,26 @@ function BindToRecievers()
 		else
 			local Anim = AnimsCache.CachedAnims[animationName]
 			local Animator = targetRig.Humanoid.Animator
-			print(AnimsCache.CachedAnims)
+
 			local AnimTrack = Animator:LoadAnimation(Anim)
 			AnimTrack:Play()
+
+			NPCCachedTracks[targetRig.Parent.Name] = AnimTrack
+		end
+	end)
+
+	StopRemEvent.OnClientEvent:Connect(function(animationName, targetRig)
+		local Player = game.Players.LocalPlayer
+		local AnimsCache = AnimationUtil.Registry[Player.Name]
+		if not targetRig then
+			local AnimTrack = AnimsCache.CachedTracks[animationName]
+			print("hufdsd")
+			AnimTrack:Stop()
+		else
+			local AnimTrack = NPCCachedTracks[targetRig.Parent.Name]
+			AnimTrack:Stop()
+
+			NPCCachedTracks[targetRig.Parent.Name] = nil
 		end
 	end)
 end

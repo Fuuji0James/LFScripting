@@ -1,4 +1,4 @@
-local ContentProvider = game:GetService("ContentProvider")
+local Players = game:GetService("Players")
 local SSS = game:GetService("ServerScriptService")
 local RF = game:GetService("ReplicatedFirst")
 local RS = game:GetService("ReplicatedStorage")
@@ -80,6 +80,11 @@ local function MovementChanger(WalkSpeed, JumpPower, Character)
 	hum.JumpPower = JumpPower
 end
 
+local function PostureBreak(Ene_CombatDataValues) -- add soon
+	print("Posture broken")
+	Ene_CombatDataValues.postureAmount = 0
+end
+
 function CombatSet.Attack(CurrentComponentTable)
 	local DataTable = CurrentComponentTable[`{CurrentComponentTable.Name}DataValues`]
 	local RecieveHumanoidEvent =
@@ -87,6 +92,9 @@ function CombatSet.Attack(CurrentComponentTable)
 	if not MathChecks:timingCheck(DataTable.lastAttacked, DataTable.maxDuration) then
 		DataTable.currentCombo = 1
 	end
+
+	local ParticleService = _registry["ParticleService"]
+	local AnimationService = _registry["AnimationService"]
 
 	DataTable.attackPromise = Promise.new(function(resolved, rejected, onCancel)
 		DataTable.canBlock = false
@@ -98,42 +106,66 @@ function CombatSet.Attack(CurrentComponentTable)
 
 		DataTable.currentAnimationTrack = DataTable.wpnAnimationSet[`Attack{DataTable.currentCombo}`]
 
-		print(DataTable.currentAnimationTrack)
+		if DataTable.currentCombo == DataTable.maxCombo then
+			DataTable.isCounterable = true
+		end
 
-		onCancel(function() -- If feinted
-			DataTable.canAttack = true
-			DataTable.canBlock = true
-			DataTable.canParry = true
+		onCancel(function(Type) -- If feinted
+			if Type == "Feint" then
+				DataTable.canAttack = true
+				DataTable.canBlock = true
+				DataTable.canParry = true
 
-			DataTable.isAttacking = false
-			DataTable.isStartUp = false
+				if CurrentComponentTable["Connections"]["Attack"] then
+					CurrentComponentTable["Connections"]["Attack"]:Disconnect()
+				end
 
-			DataTable.currentCombo = 1
+				DataTable.isAttacking = false
+				DataTable.isStartUp = false
+
+				MovementChanger(16, 50, CurrentComponentTable["IsClient"].Character)
+
+				DataTable.currentCombo = 1
+			else
+				-- plr was hit by an attack during the startup
+			end
 		end)
+
+		MovementChanger(
+			DataTable.attackWalkspeed,
+			DataTable.attackJumpPower,
+			CurrentComponentTable["IsClient"].Character
+		)
 
 		CurrentComponentTable["Connections"]["Attack"] = RecieveHumanoidEvent.OnServerEvent:Connect( -- When server recieves the humanoid from attack
 			function(plr, ene_humanoid)
-				local ParticleService = _registry["ParticleService"]
-				local AnimationService = _registry["AnimationService"]
-				print("attack received")
-				if
-					not MathChecks:dotCheck(CurrentComponentTable.IsClient.Character, ene_humanoid.Parent)
-					or not MathChecks:magnitudeCheck(CurrentComponentTable.IsClient.Character, ene_humanoid.Parent)
-				then
+				print(DataTable)
+				if not MathChecks:magnitudeCheck(CurrentComponentTable.IsClient.Character, ene_humanoid.Parent) then
 					print("attack rejected")
 					return
 				end
-				local Ene_CombatComponent =
-					ComponentHandler.GetComponentsFromInstance(ene_humanoid.Parent.Parent, TagList.Components.Combat)
+
+				local Ene_CombatComponent = ComponentHandler.GetComponentsFromInstance(
+					ene_humanoid.Parent.Parent,
+					TagList.Components.Combat
+				) or ComponentHandler.GetComponentsFromInstance(ene_humanoid.Parent, TagList.Components.Combat)
+
 				local Ene_CombatDataValues = Ene_CombatComponent["Component_Combat_R6DataValues"]
+
 				if Ene_CombatDataValues.isParrying then
 					rejected(Ene_CombatDataValues, Ene_CombatComponent)
 				elseif Ene_CombatDataValues.isBlocking then
+					if Ene_CombatDataValues.postureAmount < Ene_CombatDataValues.maxPosture then
+						Ene_CombatDataValues.postureAmount += Ene_CombatDataValues.maxPosture / 9
+					else
+						PostureBreak(Ene_CombatDataValues) -- not finished yet
+					end
+
 					print("you got blocked")
 				else
 					local ene_HRP = ene_humanoid.Parent:FindFirstChild("HumanoidRootPart")
 
-					AnimationService:PlayAnimationOnRig(CurrentComponentTable["IsClient"], ene_humanoid.Parent, "Stun1")
+					AnimationService:PlayAnimationOnRig(ene_humanoid.Parent, "Stun1")
 					ParticleService:PlayVFXAt(
 						{ ene_HRP.RootAttachment },
 						"DismantleProjectile",
@@ -141,6 +173,11 @@ function CombatSet.Attack(CurrentComponentTable)
 						10,
 						10
 					)
+
+					if Ene_CombatDataValues.attackPromise:getStatus() == "Staretd" then
+						Ene_CombatDataValues.attackPromise:cancel("Feint")
+					end
+
 					ene_humanoid.Health -= 5
 				end
 			end
@@ -155,7 +192,57 @@ function CombatSet.Attack(CurrentComponentTable)
 
 		task.wait(ActiveEnd - Active)
 
+		if DataTable.isCounterable then
+			DataTable.isCounterable = false
+		end
+
 		resolved()
+	end):catch(function(Ene_CombatDataValues, Ene_CombatComponent)
+		Ene_CombatDataValues.isParrying = true -- change to false ltr
+		Ene_CombatDataValues.canParry = true
+		Ene_CombatDataValues.canBlock = true
+		Ene_CombatDataValues.canAttack = true
+
+		if DataTable.postureAmount < DataTable.maxPosture then
+			DataTable.postureAmount += DataTable.maxPosture / 10
+		end
+
+		if DataTable.isAttacking then
+			DataTable.isAttacking = false
+		end
+
+		AnimationService:StopAnimationOnRig(Ene_CombatComponent["IsClient"].Character, "ParryAnim")
+		AnimationService:PlayAnimationOnRig(Ene_CombatComponent["IsClient"].Character, "ParryReceived")
+
+		if DataTable.isCounterable then
+			ParticleService:PlayVFXAt(
+				Ene_CombatComponent["IsClient"].Character,
+				"CounterVFX",
+				CFrame.new(0, 1, -2),
+				1,
+				2
+			)
+
+			MovementChanger(4, 16, CurrentComponentTable["IsClient"].Character)
+			AnimationService:StopAnimationOnRig(
+				CurrentComponentTable["IsClient"].Character,
+				DataTable.currentAnimationTrack.Animation.Name
+			)
+
+			DataTable.isCounterable = false
+			wait(1.5)
+			DataTable.canParry = true
+			DataTable.canAttack = true
+			DataTable.canBlock = true
+		else
+			ParticleService:PlayVFXAt(Ene_CombatComponent["IsClient"].Character, "ParryVFX", CFrame.new(0, 1, -2), 1, 2)
+
+			DataTable.canParry = true
+			DataTable.canAttack = true
+			DataTable.canBlock = true
+		end
+
+		print("you got parried", DataTable.postureAmount)
 	end)
 
 	DataTable.attackPromise:andThen(function()
@@ -163,13 +250,15 @@ function CombatSet.Attack(CurrentComponentTable)
 			CurrentComponentTable["Connections"]["Attack"]:Disconnect()
 		end
 
+		MovementChanger(16, 50, CurrentComponentTable["IsClient"].Character)
+
 		DataTable.currentCombo += 1
 		DataTable.canAttack = true
 		DataTable.canBlock = true
 		DataTable.canParry = true
 		DataTable.lastAttacked = tick()
 		DataTable.currentAnimationTrack = nil
-		if DataTable.currentCombo > 3 then
+		if DataTable.currentCombo > DataTable.maxCombo then
 			DataTable.currentCombo = 1
 		end
 	end)
@@ -181,7 +270,7 @@ function CombatSet.Feint(CurrentComponentTable)
 	local DataTable = CurrentComponentTable[`{CurrentComponentTable.Name}DataValues`]
 
 	if DataTable.canFeint and DataTable.isStartUp then
-		DataTable.attackPromise:cancel()
+		DataTable.attackPromise:cancel("Feint")
 		local _promise = Promise.new(function(resolve, reject, onCancel)
 			DataTable.canFeint = false
 			task.wait(2.5)

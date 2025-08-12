@@ -5,8 +5,13 @@
 return {
 	currentCombo = 1,
 	maxCombo = 3,
-	AnimTime = 0,
 	maxDuration = 1,
+
+	attackWalkspeed = 8,
+	attackJumpPower = 25,
+
+	postureAmount = 0,
+	maxPosture = 100,
 
 	currentAnimationTrack = nil,
 	currentChar = Instance.new("Model"),
@@ -20,6 +25,7 @@ return {
 	isFeinting = false,
 	isStartUp = false,
 	isEquipped = true,
+	isCounterable = false,
 
 	canBlock = true,
 	canParry = true,

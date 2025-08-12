@@ -20,15 +20,13 @@ function BindToRecievers()
 
 	RemEvent.OnClientEvent:Connect(function(VFXName, VFXOffset, VFXParticleCount, DestroyTime, Position)
 		local Player = game:GetService("Players").LocalPlayer
-		print(VFXUtil.Registry)
+
 		local VFX: BasePart = VFXUtil.Registry[Player.Name].CachedVFX[VFXName]:Clone()
 
 		if typeof(Position) == "table" then
 			-- Play the VFX on the attachment
 			for i, v in Position do
 				local Attachment = v
-
-				print(Attachment)
 
 				for index, particle in VFX:GetDescendants() do
 					if not particle:IsA("ParticleEmitter") then
@@ -38,11 +36,9 @@ function BindToRecievers()
 					NewParticle.Parent = Attachment
 
 					if VFXParticleCount then
-						print("guh")
 						NewParticle:Emit(VFXParticleCount)
 						Debris:AddItem(NewParticle, DestroyTime)
 					else
-						print("fanumed")
 						NewParticle.Enabled = true
 
 						task.delay(DestroyTime, function()
@@ -84,6 +80,8 @@ function BindToRecievers()
 				VFXWeld.Part0 = Character.HumanoidRootPart
 				VFXWeld.Part1 = VFX
 				VFXWeld.C0 = VFXOffset
+
+				Debris:AddItem(VFXWeld, DestroyTime + 0.5)
 			else
 				VFX.Parent = workspace
 			end

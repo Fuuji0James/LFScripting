@@ -41,8 +41,6 @@ function LoadAnims:PreloadAnims(AnimationsList)
 		end
 	end
 
-	print(self)
-
 	--[[AnimationsAdded.OnClientEvent:Connect(function(Animation: Animation, State: string)
 		if State == "LoadTrack" then
 			return
