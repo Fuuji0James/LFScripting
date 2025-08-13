@@ -7,17 +7,18 @@ local BubbleHeadVis = require(script["BubbleHead Vis"])
 function module:SetupTestConfig()
 	-- hook stuff is setup here, if you want to use _emitHook, just use config.Adapters.[name]() instead
 
-	DefaultConfig["Observers"].ExpectedTickChanged = function(parentReceiverClass, currentTick)
-		
-	end
+	DefaultConfig["Observers"].ExpectedTickChanged = function(parentReceiverClass, currentTick) end
 
 	DefaultConfig.Observers.ResyncPackageReceived = function(parentReceiverClass)
 		-- print("ResyncPackageReceived")
-		BubbleHeadVis.updateBubble(parentReceiverClass:GetServerTick(), parentReceiverClass.States.LastReceivedServerState.CurrentTick)
+		BubbleHeadVis.updateBubble(
+			parentReceiverClass:GetServerTick(),
+			parentReceiverClass.States.LastReceivedServerState.CurrentTick
+		)
 	end
-	
+
 	DefaultConfig["Adapters"].PingProvider = function()
-		return game.Players.LocalPlayer:GetNetworkPing() + Random.new():NextNumber(0, .5)
+		return game.Players.LocalPlayer:GetNetworkPing() + Random.new():NextNumber(0, 0.5)
 	end
 
 	return DefaultConfig
